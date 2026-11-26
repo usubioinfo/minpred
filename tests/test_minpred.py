@@ -142,3 +142,18 @@ def test_zero_enzyme_graceful_cascade(tmp_path: Path) -> None:
 def test_models_status_cli_command() -> None:
     """Verify ``minpred models-status`` exits cleanly."""
     assert cli_main(["models-status"]) == 0
+
+
+def test_fasta_x_stripping_and_non_standard_residue_validation(tmp_path: Path) -> None:
+    """Verify unknown 'X' residues are stripped with a warning while invalid characters raise."""
+    valid_x = tmp_path / "with_x.fasta"
+    valid_x.write_text(">seq1\nMKTXXLV*\n", encoding="utf-8")
+    with pytest.warns(RuntimeWarning, match="removed 2 unknown residue"):
+        ids, seqs = read_protein_fasta(valid_x)
+    assert ids == ["seq1"]
+    assert seqs == ["MKTLV"]
+
+    bad_fasta = tmp_path / "bad_aa.fasta"
+    bad_fasta.write_text(">seq_bad\nMKTLJVB\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid/non-standard amino acid"):
+        read_protein_fasta(bad_fasta)

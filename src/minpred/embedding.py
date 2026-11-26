@@ -24,17 +24,23 @@ from __future__ import annotations
 
 import os
 import re
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
+os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+os.environ.setdefault("HF_HUB_DISABLE_IMPLICIT_TOKEN_WARNING", "1")
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
+
 DEFAULT_ESM_MODEL = "facebook/esm2_t33_650M_UR50D"
 WINDOW_SIZE = 1022
 WINDOW_STRIDE = 511
 DEFAULT_BATCH_TOKENS = 16384
-_CLEAN_RE = re.compile(r"[^A-Z]")
+_WS_RE = re.compile(r"\s+")
+_NON_STD_AA_RE = re.compile(r"[^ARNDCQEGHILKMFPSTWYV]")
 
 
 @dataclass(frozen=True)
@@ -79,12 +85,29 @@ def read_protein_fasta(fasta_path: str | Path) -> tuple[list[str], list[str]]:
     def _commit() -> None:
         if not current_id or current_id in seen:
             return
-        cleaned = _CLEAN_RE.sub("", "".join(chunks).upper().rstrip("*"))
-        if not cleaned:
+        raw_seq = _WS_RE.sub("", "".join(chunks)).upper().rstrip("*")
+        if not raw_seq:
             return
+        removed_x = raw_seq.count("X")
+        if removed_x:
+            raw_seq = raw_seq.replace("X", "")
+            warnings.warn(
+                f"Sequence '{current_id}': removed {removed_x} unknown residue(s) marked 'X' before embedding.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        invalid = sorted(set(_NON_STD_AA_RE.findall(raw_seq)))
+        if invalid:
+            bad = ", ".join(invalid)
+            raise ValueError(
+                f"Sequence '{current_id}' contains invalid/non-standard amino acid character(s): '{bad}'. "
+                "Only the 20 standard amino acids are permitted ('X' is removed automatically)."
+            )
+        if not raw_seq:
+            raise ValueError(f"Sequence '{current_id}' is empty after removing unknown residues marked 'X'.")
         seen.add(current_id)
         seq_ids.append(current_id)
-        sequences.append(cleaned)
+        sequences.append(raw_seq)
 
     with path.open("r", encoding="utf-8") as handle:
         for raw_line in handle:
@@ -175,7 +198,10 @@ class ESM2Embedder:
             device: PyTorch device string (``"auto"``, ``"cuda"``, ``"mps"``, or ``"cpu"``).
         """
         import torch
-        from transformers import AutoModel, AutoTokenizer
+        from transformers import AutoTokenizer, EsmModel
+        from transformers import logging as tf_logging
+
+        tf_logging.set_verbosity_error()
 
         self.backbone = os.environ.get("MINPRED_ESM_MODEL") or DEFAULT_ESM_MODEL
         self.device_str = resolve_device(device)
@@ -185,15 +211,23 @@ class ESM2Embedder:
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.backbone)
         try:
-            self.model: Any = AutoModel.from_pretrained(self.backbone, dtype=dtype).to(self.device).eval()
+            self.model: Any = (
+                EsmModel.from_pretrained(self.backbone, add_pooling_layer=False, dtype=dtype)
+                .to(self.device)
+                .eval()
+            )
         except TypeError:
-            self.model = AutoModel.from_pretrained(self.backbone, torch_dtype=dtype).to(self.device).eval()
+            self.model = (
+                EsmModel.from_pretrained(self.backbone, add_pooling_layer=False, torch_dtype=dtype)
+                .to(self.device)
+                .eval()
+            )
 
     def _residue_embeddings(self, batch_seqs: list[str]) -> list[Any]:
         """Extract per-residue last-layer ``float32`` hidden states excluding ``<cls>``/``<eos>``."""
         import torch
 
-        with torch.no_grad():
+        with torch.inference_mode():
             encoded = self.tokenizer(batch_seqs, return_tensors="pt", padding=True, add_special_tokens=True)
             encoded = {k: v.to(self.device) for k, v in encoded.items()}
             hidden = self.model(**encoded).last_hidden_state.float()

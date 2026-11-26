@@ -59,10 +59,18 @@ fi
 mkdir -p "$output_dir"
 export PYTHONPATH="$app_dir/src${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONNOUSERSITE=1
+export HF_HOME="${HF_HOME:-$HOME/.cache/huggingface}"
+export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-$HF_HOME/hub}"
+export TRANSFORMERS_CACHE="${TRANSFORMERS_CACHE:-$HF_HOME/hub}"
+if [[ -d "$HUGGINGFACE_HUB_CACHE/models--facebook--esm2_t33_650M_UR50D" ]]; then
+  export HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}"
+  export TRANSFORMERS_OFFLINE="${TRANSFORMERS_OFFLINE:-1}"
+fi
+export KERAS_BACKEND="${KERAS_BACKEND:-torch}"
 export TF_FORCE_GPU_ALLOW_GROWTH="${TF_FORCE_GPU_ALLOW_GROWTH:-true}"
 export TF_CPP_MIN_LOG_LEVEL="${TF_CPP_MIN_LOG_LEVEL:-2}"
 
-"$python_bin" -c 'import Bio, keras, numpy, pandas, torch, transformers'
+"$python_bin" -I -c 'import Bio, keras, numpy, pandas, torch, transformers'
 "$python_bin" "$app_dir/minpred.py" \
   -i "$input_fasta" \
   -o "$output_dir" \
