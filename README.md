@@ -1,166 +1,95 @@
 # MINpred
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/usubioinfo/minpred/releases/tag/v1.0.0)
-[![Python](https://img.shields.io/badge/python-%E2%89%A53.9-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-%E2%89%A53.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Models: Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.21897103.svg)](https://doi.org/10.5281/zenodo.21897103)
+[![Web Server](https://img.shields.io/badge/Web_Server-kaabil.net%2Fminpred-0f766e.svg)](https://kaabil.net/minpred)
 
-MINpred is an alignment-free, four-phase deep-learning tool for identifying
-and classifying nitrogen mineralization-related enzymes. It first distinguishes
-enzymes from non-enzymes, identifies nitrogen mineralization enzymes, assigns
-them to ten functional classes, and finally predicts class-specific EC numbers.
-The standalone command-line interface accepts protein FASTA files directly and
-can use TransDecoder to predict proteins from nucleotide or transcript FASTA
-files. Lightweight TFLite inference and separately archived, checksum-verified
-models keep the source repository small and make model retrieval reproducible.
+**MINpred** is an alignment-free, four-phase hierarchical deep-learning package for identifying and classifying microbial and soil nitrogen-mineralization enzymes down to four-digit Enzyme Commission (EC) numbers. It couples overlap-averaged representations from the frozen 650-million-parameter **ESM-2** protein language model (`facebook/esm2_t33_650M_UR50D`) with regularized multilayer perceptrons (`minpred_mlp`) trained with decoupled **AdamW** on single-linkage homology-disjoint UniProtKB/Swiss-Prot splits.
 
-## Key Features
-
-**Hierarchical four-phase pipeline**
-
-- **Phase I — Enzyme vs. non-enzyme:** binary CNN using the 640-dimensional
-  DPC+NMBroto representation (average 10-fold CV accuracy: **95.70%**,
-  MCC: **0.914**; independent-test accuracy: **93.43%**, MCC: **0.868**).
-- **Phase II — Nitrogen mineralization vs. non-mineralization enzyme:** binary
-  CNN using DPC+NMBroto (average 10-fold CV accuracy: **95.23%**, MCC:
-  **0.9042**; independent-test accuracy: **92.43%**, MCC: **0.8487**).
-- **Phase III — Nitrogen mineralization enzyme class:** multiclass CNN covering
-  ten enzyme classes using DPC+NMBroto (average 10-fold CV overall accuracy:
-  **96.23%**, MCC: **0.8706**; independent-test overall accuracy: **93.83%**,
-  MCC: **0.7640**).
-- **Phase IV — EC-number assignment:** ten class-specific CNNs using the
-  2,400-dimensional CKSAAP representation, covering **69 specific EC numbers**
-  plus wildcard and `Others` outputs. Independent-test overall accuracy across
-  the reported classifiers ranges from **88.43% to 98.24%**.
-
-**Modern packaging and portable TFLite inference**
-
-- Managed through **PEP 621** metadata in `pyproject.toml`, with a reproducible
-  Python dependency environment in `uv.lock`.
-- Uses **TensorFlow Lite (`.tflite`)** models for portable CPU inference; model
-  files are downloaded from Zenodo only when required and verified using file
-  size and SHA-256 checksums.
-- Supports protein FASTA directly and nucleotide/transcript FASTA through the
-  external **TransDecoder** dependency.
-
-## Installation
-
-MINpred requires Python 3.9 or newer. Install the package and TensorFlow Lite
-runtime support with:
-
-```bash
-pip install '.[tensorflow]'
-```
-
-For a reproducible development environment using the committed `uv.lock`:
-
-```bash
-uv sync --extra tensorflow
-uv run minpred models-status
-```
-
-The trained models are distributed separately through Zenodo. A required model
-is downloaded automatically on first use and validated against its published
-file size and SHA-256 checksum. To download models in advance:
-
-```bash
-minpred download-models all
-minpred models-status
-```
-
-By default, models are stored in the operating system's user cache directory.
-Set `MINPRED_MODEL_DIR` to use a specific local model directory.
-
-### USU cluster deployment
-
-The maintained cluster launchers mirror the DeepNEC deployment. `minpred.sl`
-loads `dl-gpu`, exposes the TransDecoder 6 installation bundled inside that
-module, validates the Python runtime, and runs the standalone CLI. The web
-wrapper `run_minpred_web.slurm` delegates to the same launcher so web and
-standalone predictions use one code and model checkout.
-
-On `biocluster.usu.edu`, prepare the checkout-local dependency layer without
-replacing the module's TensorFlow installation:
-
-```bash
-module load dl-gpu
-python -m venv --system-site-packages .venv
-.venv/bin/python -m pip install --no-deps -e .
-.venv/bin/python -m pip install platformdirs
-mkdir -p models "$HOME/prediction-jobs/minpred"
-```
-
-The web deployment should use
-`$HOME/naveen_tools/minpred/run_minpred_web.slurm` as its remote script and
-`$HOME/prediction-jobs/minpred` as its remote job directory.
-
-## Prediction
-
-```bash
-minpred -i example/test.fasta -l Phase1 -od MINpred_results
-minpred -i example/test.fasta -l Phase4 -n amidohydrolases -od MINpred_results
-```
-
-MINpred accepts protein FASTA input by default. For transcript or other
-nucleotide FASTA input, install TransDecoder and select nucleotide mode:
-
-```bash
-conda install -c conda-forge -c bioconda transdecoder
-minpred -i transcripts.fasta --sequence-type nucleotide -l Phase4 \
-  -od MINpred_results
-```
-
-Phase IV uses the Phase III enzyme-class prediction to select the matching EC
-model for each sequence. Use `-n CLASS` only to restrict Phase IV to one class.
-
-In nucleotide mode, MINpred runs `TransDecoder.LongOrfs`, preserves its log and
-the predicted peptide FASTA inside the output directory, removes terminal stop
-symbols, writes `translated_proteins.fasta`, and then applies the selected
-MINpred phases to those peptides. TransDecoder is an external Conda dependency and is therefore not
-included in `uv.lock`, which covers the Python environment only. The supplied
-`minpred_environment.yml` installs both TransDecoder and the Python runtime.
-
-Phases I–III use the 640-dimensional DPC+NMBroto hybrid representation. Phase
-IV uses the 2,400-dimensional CKSAAP representation.
-
-## Model files
-
-The trained MINpred models were converted to TensorFlow Lite (`.tflite`) for
-efficient and portable CPU inference. They are downloaded automatically from
-Zenodo when required and verified using the file sizes and SHA-256 checksums
-recorded in `minpred/model_manifest.json`.
-
-The model files are archived in Zenodo record
-[`21897103`](https://doi.org/10.5281/zenodo.21897103) under the Creative Commons
-Attribution 4.0 International license (CC BY 4.0).
-
-## License
-
-The MINpred source code is distributed under the [MIT License](LICENSE).
-The separately archived TFLite model files are distributed under
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Please cite the
-Zenodo model record when using the trained models.
-
-## Citation
-
-Until the associated journal article is published, cite the model release as:
-
-> Duhan, N., Norton, J. M., & Kaundal, R. (2026). *MINpred: TFLite models for
-> nitrogen mineralization-related enzyme classification* (Version 1.0.0).
-> Zenodo. https://doi.org/10.5281/zenodo.21897103
+All **13 release Keras 3 checkpoints (`.keras`) and fold-fit feature scalers (`.npz`)** are bundled directly inside the Python package and verified via SHA-256 checksums — no separate model download step is required.
 
 ---
 
-Developed by **Naveen Duhan**
-*Kaundal Artificial Intelligence & Advanced Bioinformatics Lab (KAABiL)*
-Utah State University, Logan, UT
+## Hierarchical Four-Phase Architecture
 
-**Technical Queries / Bugs:** Naveen Duhan
-([naveen.duhan@usu.edu](mailto:naveen.duhan@usu.edu))
+1. **Phase I — Enzyme vs. Strict Non-Enzyme:** Binary screening on 1,280-d ESM-2 representations (`<40%` sequence-identity held-out test `MCC = 0.954 ± 0.007`, `AUROC = 0.998`, `AUPRC = 0.998`).
+2. **Phase II — Nitrogen Mineralization vs. Other Enzyme:** Separates target peptidases and linear C–N amidohydrolases from non-target enzymes, including homologous EC 3.4/3.5 controls (`MCC = 0.936 ± 0.011`, `AUROC = 0.998`, `AUPRC = 0.986`).
+3. **Phase III — Ten Functional N-Mineralization Classes:** Classifies candidates into `Aminopeptidases` (EC 3.4.11), `Dipeptidases` (3.4.13), `Dipeptidyl-peptidases` (3.4.14), `Metallopeptidases` / metallocarboxypeptidases (3.4.17), `Omega peptidases` (3.4.19), `Serine endopeptidases` (3.4.21), `Cysteine endopeptidases` (3.4.22), `Aspartic endopeptidases` (3.4.23), `Metalloendopeptidases` (3.4.24), and `Amidohydrolases` (3.5.1) (`<60%` identity `MCC = 0.975 ± 0.007`, macro `AUROC = 0.998`).
+4. **Phase IV — Ten Class-Specific 4-Digit EC Predictors:** Assigns explicit four-digit EC numbers across 52 catalytic specificities plus class-specific `Others` pools (`Accuracy = 96.1% ± 0.5%`, `MCC = 0.955 ± 0.006`).
 
-**Scientific Queries:** Dr. Rakesh Kaundal
-([rkaundal@usu.edu](mailto:rkaundal@usu.edu))
+Proteins exceeding ESM-2's native `1,022`-residue context window are embedded without C-terminal truncation using `1,022`-residue sliding windows at a `511`-residue stride with per-residue overlap averaging prior to mean-pooling.
 
-**Lab Website:** [https://kaabil.net](https://kaabil.net)
+---
 
-Released under the terms of the **[MIT License](LICENSE)**.
+## Installation
+
+MINpred uses modern **PEP 621 / Hatchling** `src/` packaging and requires **Python 3.10+**.
+
+### Install with `uv` (recommended)
+```bash
+uv sync --python 3.12
+uv run minpred models-status
+```
+
+### Install with `pip`
+```bash
+pip install .
+minpred models-status
+```
+
+### Install with Conda / Mamba (includes `TransDecoder` for nucleotide inputs)
+```bash
+conda env create -f minpred_environment.yml
+conda activate minpred
+minpred models-status
+```
+
+*(Note: On first run, Hugging Face `transformers` automatically caches `facebook/esm2_t33_650M_UR50D` locally.)*
+
+---
+
+## Command-Line Usage
+
+```bash
+# End-to-end 4-phase prediction (default: Phase 4 with automatic EC routing)
+minpred -i example/test.fasta -o MINpred_results
+
+# Restrict Phase IV to a single enzyme class
+minpred -i example/test.fasta -o MINpred_serine -p 4 -c serine
+
+# Screen only Phase I (Enzyme vs Non-enzyme) or Phase III (10 Classes)
+minpred -i example/test.fasta -o MINpred_phase1 -p 1
+minpred -i example/test.fasta -o MINpred_phase3 -p 3
+
+# Predict from nucleotide transcripts / contigs (requires TransDecoder on PATH)
+minpred -i transcripts.fasta -o MINpred_nucl -t nucleotide
+```
+
+### CLI Options
+| Option | Default | Description |
+| :--- | :--- | :--- |
+| `-i`, `--input` | *(required)* | Input protein or nucleotide FASTA file |
+| `-o`, `--outdir` | `MINpred_results` | Output directory for per-phase and summary TSV tables |
+| `-f`, `--outfile` | `MINpred_results.tsv` | Summary TSV filename inside `--outdir` |
+| `-p`, `--phase` | `4` (`Phase4`) | Terminal phase to execute (`1`–`4` or `Phase1`–`Phase4`) |
+| `-c`, `--enzyme-class`, `--class` | `all` | Phase IV enzyme class (`all` or one of the 10 classes) |
+| `-t`, `--seq-type` | `protein` | `protein` or `nucleotide` (`TransDecoder.LongOrfs` ORF translation) |
+| `-d`, `--device` | `auto` | Compute device (`auto`, `cuda`, `cuda:0`, `mps`, `cpu`) |
+| `-v`, `--version` | — | Show MINpred version |
+
+### Output Files
+Inside `--outdir`, MINpred writes:
+- `MINpred_results.tsv` (or `-f <filename>`): Unified summary table across all input sequences (`SampleID`, `Length`, `Phase1_Prediction`, `Phase1_Confidence`, `Phase2_Prediction`, `Phase2_Confidence`, `Phase3_Class`, `Phase3_Confidence`, `Phase4_EC`, `Phase4_Confidence`, `Prediction`).
+- `Phase_1_dnn_log.tsv` (and `.txt`): Per-sequence Phase I class probabilities (`%`).
+- `Phase_2_dnn_log.tsv` (and `.txt`): Per-sequence Phase II probabilities for predicted enzymes.
+- `Phase_3_dnn_log.tsv` (and `.txt`): Per-sequence 10-class probabilities for predicted N-mineralization enzymes.
+- `Phase_4_<class>_log.tsv` (and `.txt`): Per-sequence 4-digit EC probabilities within each routed enzyme class.
+
+---
+
+## Author & License
+
+- **Developer & Author:** Naveen Duhan ([naveen.duhan@usu.edu](mailto:naveen.duhan@usu.edu))
+- **Lab:** Kaundal Artificial Intelligence & Advanced Bioinformatics Lab ([KAABiL](https://kaabil.net)), Utah State University, Logan, UT, USA *(PhD Supervisor: Dr. Rakesh Kaundal; PhD Committee Member: Dr. Jeanette M. Norton)*
+- **License:** Released under the **[MIT License](LICENSE)** (`SPDX-License-Identifier: MIT`).

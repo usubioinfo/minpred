@@ -1,14 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Naveen Duhan <naveen.duhan@usu.edu>
+# SPDX-License-Identifier: MIT
 name: minpred
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python=3.10
+  - python>=3.10,<3.13
   - transdecoder
   - pip
   - pip:
-      - biopython>=1.80
-      - numpy>=1.23
-      - pandas>=1.5
-      - platformdirs>=3.0
-      - tensorflow>=2.13
+      - biopython>=1.81
+      - keras>=3.3
+      - numpy>=1.24
+      - pandas>=2.0
+      - torch>=2.1
+      - transformers>=4.38
+      - -e .

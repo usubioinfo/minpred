@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 Naveen Duhan <naveen.duhan@usu.edu>
+# SPDX-License-Identifier: MIT
 #SBATCH --job-name=minpred-web
 #SBATCH --partition=mahaguru
 #SBATCH --nodelist=chela-g01
@@ -20,7 +22,6 @@ fi
 
 export MINPRED_APP_DIR="$app_dir"
 export MINPRED_MODULE="${MINPRED_MODULE:-dl-gpu}"
-export MINPRED_MODEL_DIR="${MINPRED_MODEL_DIR:-$app_dir/models}"
 export TF_FORCE_GPU_ALLOW_GROWTH=true
 export TF_CPP_MIN_LOG_LEVEL=2
 

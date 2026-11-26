@@ -1,48 +1,100 @@
+# SPDX-FileCopyrightText: 2026 Naveen Duhan <naveen.duhan@usu.edu>
+# SPDX-License-Identifier: MIT
+
 [build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
 
 [project]
-name = "MINpred"
+name = "minpred"
 version = "1.0.0"
-description = "Deep-learning prediction of nitrogen mineralization-related enzymes"
+description = "Alignment-free four-phase identification and Enzyme Commission classification of nitrogen-mineralization enzymes using ESM-2 and regularized MLPs"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-  {name = "Naveen Duhan", email = "naveen.duhan@outlook.com"},
+  { name = "Naveen Duhan", email = "naveen.duhan@usu.edu" },
+]
+maintainers = [
+  { name = "Naveen Duhan", email = "naveen.duhan@usu.edu" },
+]
+keywords = [
+  "bioinformatics",
+  "deep-learning",
+  "enzyme-commission",
+  "esm-2",
+  "metagenomics",
+  "nitrogen-mineralization",
+  "protein-language-model",
 ]
 classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-  "biopython>=1.80",
-  "numpy>=1.23",
-  "pandas>=1.5",
-  "platformdirs>=3.0",
+  "biopython>=1.81",
+  "keras>=3.3",
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "torch>=2.1",
+  "transformers>=4.38",
 ]
 
 [project.optional-dependencies]
-tensorflow = ["tensorflow>=2.13"]
-test = ["pytest>=7"]
+tensorflow = ["tensorflow>=2.15"]
+test = ["pytest>=8.0"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
 
 [project.scripts]
-minpred = "minpred.__main__:main"
+minpred = "minpred.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/usubioinfo/minpred"
+Homepage = "https://kaabil.net/minpred"
 Repository = "https://github.com/usubioinfo/minpred"
-Models = "https://doi.org/10.5281/zenodo.21897103"
+Issues = "https://github.com/usubioinfo/minpred/issues"
 
-[tool.setuptools.packages.find]
-include = ["minpred*"]
+[tool.hatch.build]
+artifacts = [
+  "src/minpred/models/*.keras",
+  "src/minpred/models/*.npz",
+  "src/minpred/models/*.json",
+]
 
-[tool.setuptools.package-data]
-minpred = ["model_manifest.json"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/minpred"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+  "/example",
+  "/minpred.py",
+  "/minpred.sl",
+  "/run_minpred_web.slurm",
+  "/minpred_environment.yml",
+  "/README.md",
+  "/LICENSE",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 108
+target-version = "py310"

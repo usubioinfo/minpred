@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 Naveen Duhan <naveen.duhan@usu.edu>
+# SPDX-License-Identifier: MIT
 #SBATCH --job-name=minpred
 #SBATCH --partition=mahaguru
 #SBATCH --nodelist=chela-g01
@@ -35,51 +37,40 @@ if command -v module >/dev/null 2>&1; then
   module load "$module_name"
 elif [[ -x /usr/bin/modulecmd ]]; then
   eval "$(/usr/bin/modulecmd bash load "$module_name")"
-else
-  echo "The cluster module command is unavailable; cannot load $module_name." >&2
-  exit 69
-fi
-
-# Keep a fallback for dl-gpu installations whose public TransDecoder symlinks
-# do not resolve. The modulefile should normally expose this directory itself.
-module_python="$(command -v python)"
-module_prefix="${CONDA_PREFIX:-$(dirname "$(dirname "$module_python")")}"
-transdecoder_util="$module_prefix/opt/transdecoder/util"
-if ! command -v TransDecoder.LongOrfs >/dev/null 2>&1 && [[ -d "$transdecoder_util" ]]; then
-  export PATH="$transdecoder_util:$PATH"
-fi
-if [[ "$sequence_type" == nucleotide ]] && ! command -v TransDecoder.LongOrfs >/dev/null 2>&1; then
-  echo "TransDecoder.LongOrfs is unavailable in the $module_name module." >&2
-  exit 69
 fi
 
 if [[ -x "$app_dir/.venv/bin/python" ]]; then
   python_bin="$app_dir/.venv/bin/python"
 else
-  python_bin="$(command -v python || true)"
+  python_bin="$(command -v python3 || command -v python || true)"
 fi
-[[ -n "$python_bin" && -x "$python_bin" ]] || { echo "The $module_name Python interpreter was not found." >&2; exit 69; }
+[[ -n "$python_bin" && -x "$python_bin" ]] || { echo "Python interpreter was not found." >&2; exit 69; }
+
+module_prefix="${CONDA_PREFIX:-$(dirname "$(dirname "$python_bin")")}"
+transdecoder_util="$module_prefix/opt/transdecoder/util"
+if ! command -v TransDecoder.LongOrfs >/dev/null 2>&1 && [[ -d "$transdecoder_util" ]]; then
+  export PATH="$transdecoder_util:$PATH"
+fi
+if [[ "$sequence_type" == nucleotide ]] && ! command -v TransDecoder.LongOrfs >/dev/null 2>&1; then
+  echo "TransDecoder.LongOrfs is unavailable in PATH / $module_name." >&2
+  exit 69
+fi
 
 mkdir -p "$output_dir"
-export MINPRED_MODEL_DIR="${MINPRED_MODEL_DIR:-$app_dir/models}"
-export PYTHONPATH="$app_dir${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH="$app_dir/src${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONNOUSERSITE=1
 export TF_FORCE_GPU_ALLOW_GROWTH="${TF_FORCE_GPU_ALLOW_GROWTH:-true}"
 export TF_CPP_MIN_LOG_LEVEL="${TF_CPP_MIN_LOG_LEVEL:-2}"
 
-"$python_bin" -c 'import Bio, numpy, pandas, platformdirs, tensorflow'
+"$python_bin" -c 'import Bio, keras, numpy, pandas, torch, transformers'
 "$python_bin" "$app_dir/minpred.py" \
   -i "$input_fasta" \
-  -od "$output_dir" \
-  -o minpred_predictions.tsv \
-  -l "$level" \
-  -n "$enzyme_class" \
-  --sequence-type "$sequence_type"
-
-for result in "$output_dir"/Phase_*_log.txt; do
-  [[ -f "$result" ]] || continue
-  cp -- "$result" "${result%.txt}.tsv"
-done
+  -o "$output_dir" \
+  -f minpred_predictions.tsv \
+  -p "$level" \
+  -c "$enzyme_class" \
+  -t "$sequence_type" \
+  -d "${MINPRED_DEVICE:-auto}"
 
 prediction_file=$(find "$output_dir" -maxdepth 1 -type f -name '*.tsv' -size +0c -print -quit)
 if [[ -z "$prediction_file" ]]; then

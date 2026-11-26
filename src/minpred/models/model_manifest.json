@@ -1,0 +1,373 @@
+{
+  "schema_version": 2,
+  "model_release": "1.0.0",
+  "release_seed": 2,
+  "training_run": "2026-11-20_ecfinal_seed2/ESM2_650M_mlp_adamw_full",
+  "esm_backbone": "facebook/esm2_t33_650M_UR50D",
+  "embedding_dim": 1280,
+  "window_size": 1022,
+  "window_stride": 511,
+  "repository": "https://github.com/usubioinfo/minpred",
+  "models": {
+    "phase1": {
+      "phase": 1,
+      "class_label": null,
+      "keras_filename": "phase1.keras",
+      "keras_bytes": 9517805,
+      "keras_sha256": "61b617260b3cd8bc41e7c6ea2207f6a910cece1b5cedca90057343d2d0822a68",
+      "scaler_filename": "phase1_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "5abb39e6b0563eb3f2793181b6ad19ecdfacfdfbaf80f20f77d51183047a805b",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "enzyme",
+        "non_enzyme"
+      ],
+      "labels": [
+        "Enzyme",
+        "Non-enzyme"
+      ]
+    },
+    "phase2": {
+      "phase": 2,
+      "class_label": null,
+      "keras_filename": "phase2.keras",
+      "keras_bytes": 9517805,
+      "keras_sha256": "649d6b4f0c1e1c6e466e9c044f387bd16556b436f3f31774aee3f79c35432891",
+      "scaler_filename": "phase2_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "bcff12800631bec4ae127afaca336ff27ede0f91628be191a009b7c55f776894",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "mineral",
+        "non_mineral"
+      ],
+      "labels": [
+        "Nitrogen Mineralization",
+        "Non-nitrogen Mineralization"
+      ]
+    },
+    "phase3": {
+      "phase": 3,
+      "class_label": null,
+      "keras_filename": "phase3.keras",
+      "keras_bytes": 9542494,
+      "keras_sha256": "fad0babb6b769d5a8f49361adf320e2452423c7e2f19126c6908211c071d93c1",
+      "scaler_filename": "phase3_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "4bf135650b6be0302501e2508c78d794ce78c1366c35e3ae854ce650134b6df8",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "C01_Aminopeptidases",
+        "C02_Dipeptidases",
+        "C03_Dipeptidyl-peptidases",
+        "C04_Metallopeptidases",
+        "C05_Omega_peptidases",
+        "C06_Serine_endopeptidases",
+        "C07_Cysteine_endopeptidases",
+        "C08_Aspartic_endopeptidases",
+        "C09_Metalloendopeptidases",
+        "C10_Amidohydrolases"
+      ],
+      "labels": [
+        "Aminopeptidases",
+        "Dipeptidases",
+        "Dipeptidyl-peptidases",
+        "Metallopeptidases",
+        "Omega peptidases",
+        "Serine endopeptidases",
+        "Cysteine endopeptidases",
+        "Aspartic endopeptidases",
+        "Metalloendopeptidases",
+        "Amidohydrolases"
+      ]
+    },
+    "phase4_aminopeptidases": {
+      "phase": 4,
+      "class_label": "Aminopeptidases",
+      "keras_filename": "phase4_aminopeptidases.keras",
+      "keras_bytes": 9533239,
+      "keras_sha256": "e6d672a087f7e61707d409599fa5ee83434b159ededf639bad44faeaf0cee8f8",
+      "scaler_filename": "phase4_aminopeptidases_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "182d6477a55ef7dbd81fae9f93d38e210ddf09fcbb7357acdd3c4330d730e6d4",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.4.11.2",
+        "3.4.11.4",
+        "3.4.11.5",
+        "3.4.11.9",
+        "3.4.11.18",
+        "3.4.11.21",
+        "Others"
+      ],
+      "labels": [
+        "3.4.11.2",
+        "3.4.11.4",
+        "3.4.11.5",
+        "3.4.11.9",
+        "3.4.11.18",
+        "3.4.11.21",
+        "Others"
+      ]
+    },
+    "phase4_dipeptidases": {
+      "phase": 4,
+      "class_label": "Dipeptidases",
+      "keras_filename": "phase4_dipeptidases.keras",
+      "keras_bytes": 9523987,
+      "keras_sha256": "0b97c48efc6efe2f33a73834a1fc7dac302774ffd759c310370b7b311bcab2a2",
+      "scaler_filename": "phase4_dipeptidases_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "3a12dfda967b954be4bf57181231eef24b61da691a322b20ab2d6aa2fe724634",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.4.13.9",
+        "3.4.13.19",
+        "3.4.13.21",
+        "Others"
+      ],
+      "labels": [
+        "3.4.13.9",
+        "3.4.13.19",
+        "3.4.13.21",
+        "Others"
+      ]
+    },
+    "phase4_dipeptidyl": {
+      "phase": 4,
+      "class_label": "Dipeptidyl-peptidases",
+      "keras_filename": "phase4_dipeptidyl.keras",
+      "keras_bytes": 9527071,
+      "keras_sha256": "cae4390198dc991f2e915c99b516fd5ca16bd5e363e38e09cb4c4948ecd9c37d",
+      "scaler_filename": "phase4_dipeptidyl_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "43c7ff7d124ebd66162be12b9178cfc000279fcd07b30d078ffb9dd68b7b0936",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.4.14.4",
+        "3.4.14.5",
+        "3.4.14.10",
+        "3.4.14.11",
+        "Others"
+      ],
+      "labels": [
+        "3.4.14.4",
+        "3.4.14.5",
+        "3.4.14.10",
+        "3.4.14.11",
+        "Others"
+      ]
+    },
+    "phase4_metallopeptidases": {
+      "phase": 4,
+      "class_label": "Metallopeptidases",
+      "keras_filename": "phase4_metallopeptidases.keras",
+      "keras_bytes": 9517819,
+      "keras_sha256": "c3baa2131bdb30c99847eb998d8b7e3c1501b977b9ada6dc7dd775ea96d0f4da",
+      "scaler_filename": "phase4_metallopeptidases_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "ad2a855b907378168215bbef7d56143ad6c76ca324fb3ef7aef1ac666828a770",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.4.17.21",
+        "Others"
+      ],
+      "labels": [
+        "3.4.17.21",
+        "Others"
+      ]
+    },
+    "phase4_omega": {
+      "phase": 4,
+      "class_label": "Omega peptidases",
+      "keras_filename": "phase4_omega.keras",
+      "keras_bytes": 9523987,
+      "keras_sha256": "83c85a50795ba61bb74a4851db15db51a670f68026dc3a9a2673e92079a752ac",
+      "scaler_filename": "phase4_omega_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "6e58168287ae5fe6eb23a583d691900cef16c77d7969fd09497ecfb73958ea0a",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.4.19.3",
+        "3.4.19.12",
+        "3.4.19.13",
+        "Others"
+      ],
+      "labels": [
+        "3.4.19.3",
+        "3.4.19.12",
+        "3.4.19.13",
+        "Others"
+      ]
+    },
+    "phase4_serine": {
+      "phase": 4,
+      "class_label": "Serine endopeptidases",
+      "keras_filename": "phase4_serine.keras",
+      "keras_bytes": 9557914,
+      "keras_sha256": "30820e537deb60c19419131d3ec2a769b8a7294b7e931efacdc035fcc9d4516e",
+      "scaler_filename": "phase4_serine_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "7f0a62c5f76e88007251bb8ab94ed89e9ed75fd0e6e90bd58e7008bd911c7e06",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.4.21.1",
+        "3.4.21.4",
+        "3.4.21.26",
+        "3.4.21.53",
+        "3.4.21.62",
+        "3.4.21.88",
+        "3.4.21.89",
+        "3.4.21.90",
+        "3.4.21.91",
+        "3.4.21.92",
+        "3.4.21.97",
+        "3.4.21.102",
+        "3.4.21.105",
+        "3.4.21.107",
+        "Others"
+      ],
+      "labels": [
+        "3.4.21.1",
+        "3.4.21.4",
+        "3.4.21.26",
+        "3.4.21.53",
+        "3.4.21.62",
+        "3.4.21.88",
+        "3.4.21.89",
+        "3.4.21.90",
+        "3.4.21.91",
+        "3.4.21.92",
+        "3.4.21.97",
+        "3.4.21.102",
+        "3.4.21.105",
+        "3.4.21.107",
+        "Others"
+      ]
+    },
+    "phase4_cysteine": {
+      "phase": 4,
+      "class_label": "Cysteine endopeptidases",
+      "keras_filename": "phase4_cysteine.keras",
+      "keras_bytes": 9527071,
+      "keras_sha256": "ee16347de4cc65d9c8fb1390e3b2263273dba8f2cf4be8883ef7edc700a0f5cc",
+      "scaler_filename": "phase4_cysteine_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "e6026dc4850506b20354292b7ece56f4eb53c40e9176d31b46419f841d7564ca",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.4.22.15",
+        "3.4.22.28",
+        "3.4.22.50",
+        "3.4.22.66",
+        "Others"
+      ],
+      "labels": [
+        "3.4.22.15",
+        "3.4.22.28",
+        "3.4.22.50",
+        "3.4.22.66",
+        "Others"
+      ]
+    },
+    "phase4_aspartic": {
+      "phase": 4,
+      "class_label": "Aspartic endopeptidases",
+      "keras_filename": "phase4_aspartic.keras",
+      "keras_bytes": 9523987,
+      "keras_sha256": "429872fc00b8aed488a24c347d48a8467961c9dffcd8a9cc3a4cfc611f21ed71",
+      "scaler_filename": "phase4_aspartic_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "6e749de29d4d6743da8dea88ac65badc1e4bda02b6748af74323b3b83b510c29",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.4.23.24",
+        "3.4.23.36",
+        "3.4.23.43",
+        "Others"
+      ],
+      "labels": [
+        "3.4.23.24",
+        "3.4.23.36",
+        "3.4.23.43",
+        "Others"
+      ]
+    },
+    "phase4_metalloendopeptidases": {
+      "phase": 4,
+      "class_label": "Metalloendopeptidases",
+      "keras_filename": "phase4_metalloendopeptidases.keras",
+      "keras_bytes": 9539407,
+      "keras_sha256": "101b9a1e47d09471aea65f8fc47a62ccd1aa91954eaa0d5169c3d4970d5be378",
+      "scaler_filename": "phase4_metalloendopeptidases_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "892dae699afa395330107b40749a43cf7bdd8cfaf791ee314ae260a1ef3cee26",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.4.24.3",
+        "3.4.24.11",
+        "3.4.24.28",
+        "3.4.24.39",
+        "3.4.24.59",
+        "3.4.24.64",
+        "3.4.24.69",
+        "3.4.24.84",
+        "Others"
+      ],
+      "labels": [
+        "3.4.24.3",
+        "3.4.24.11",
+        "3.4.24.28",
+        "3.4.24.39",
+        "3.4.24.59",
+        "3.4.24.64",
+        "3.4.24.69",
+        "3.4.24.84",
+        "Others"
+      ]
+    },
+    "phase4_amidohydrolases": {
+      "phase": 4,
+      "class_label": "Amidohydrolases",
+      "keras_filename": "phase4_amidohydrolases.keras",
+      "keras_bytes": 9533241,
+      "keras_sha256": "5992f0ca5a3528633d0d69345ef9202ca5b743f15f335903098c69b973f2e8aa",
+      "scaler_filename": "phase4_amidohydrolases_scaler.npz",
+      "scaler_bytes": 20984,
+      "scaler_sha256": "837bc054899f8e218c5c52e86d6468a9f97db82562ad2d90d65c164aa8758e97",
+      "feature": "ESM2_650M",
+      "feature_dim": 1280,
+      "raw_labels": [
+        "3.5.1.1",
+        "3.5.1.2",
+        "3.5.1.4",
+        "3.5.1.5",
+        "3.5.1.11",
+        "3.5.1.28",
+        "Others"
+      ],
+      "labels": [
+        "3.5.1.1",
+        "3.5.1.2",
+        "3.5.1.4",
+        "3.5.1.5",
+        "3.5.1.11",
+        "3.5.1.28",
+        "Others"
+      ]
+    }
+  }
+}
